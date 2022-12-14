@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func readInput() (inputLines []string) {
@@ -23,38 +25,66 @@ func readInput() (inputLines []string) {
 	return inputLines
 }
 
-type command struct {
-}
-
-func parseCommands(inputLines []string) []command {
-	return nil
-}
-
-func main() {
-	//inputLines := readInput()
-	//commands := parseCommands(inputLines)
-	root := &directory{
+func initializeFileSystem() (root *directory) {
+	return &directory{
 		name:           "/",
 		files:          make(map[string]*file),
 		subDirectories: make(map[string]*directory),
 		parent:         nil,
 	}
-	root.createSubDirectory("chch")
-	root.subDirectories["chch"].createSubDirectory("ghgh")
-	root.subDirectories["chch"].createFile("test", 1000)
-	root.subDirectories["chch"].subDirectories["ghgh"].createFile("bigif", 2000)
-	root.subDirectories["chch"].subDirectories["ghgh"].createFile("bigger", 3000)
-	var pwd *directory
-	pwd = root
-	pwd = root.subDirectories["chch"]
-	for _, f := range pwd.files {
-		fmt.Println(f.name, f.size)
-	}
-	for _, d := range pwd.subDirectories {
-		for _, f := range d.files {
-			fmt.Println(f.name, f.size)
+}
+
+type command struct {
+	command  string
+	argument string
+	output   []string
+}
+
+func parseCommands(inputLines []string) (commands []command) {
+	for _, line := range inputLines {
+		var newCommand command
+		if line[0] == '$' {
+			newCommand.command = line[2:4]
+			if newCommand.command == "cd" {
+				newCommand.argument = line[5:]
+				newCommand.output = nil
+			} else if newCommand.command == "ls" {
+				newCommand.argument = ""
+			}
+			commands = append(commands, newCommand)
+		} else {
+			previousCommand := &commands[(len(commands) - 1)]
+			previousCommand.output = append(previousCommand.output, line)
 		}
 	}
+	return commands
+}
+
+func (c *command) parseOutput() (files map[string]int, dirs []string) {
+	files = make(map[string]int)
+	for _, outputLine := range c.output {
+		outputParts := strings.Split(outputLine, " ")
+		if outputParts[0] == "dir" {
+			dirs = append(dirs, outputParts[1])
+		} else {
+			files[outputParts[1]], _ = strconv.Atoi(outputParts[0])
+		}
+	}
+	return
+}
+
+func executeCommands(commands []command) {
+	//root := initializeFileSystem()
+
+	//Create PWD object. Starts at root
+	//pwd := root
+	files, dirs := commands[1].parseOutput()
+	fmt.Println(files, dirs)
+}
+
+func main() {
+	commands := parseCommands(readInput())
+	executeCommands(commands)
 }
 
 type directory struct {
