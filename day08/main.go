@@ -98,6 +98,7 @@ func getNumberOfTreesVisibleFromEdges() (visibleTrees int) {
 				if !t.visited {
 					visibleTrees++
 					t.visible = true
+					t.visited = true
 				}
 				visibleHeight = t.height
 			}
@@ -109,6 +110,7 @@ func getNumberOfTreesVisibleFromEdges() (visibleTrees int) {
 				if !row[tIndex].visited {
 					visibleTrees++
 					row[tIndex].visible = true
+					row[tIndex].visited = true
 				}
 				visibleHeight = row[tIndex].height
 			}
@@ -122,16 +124,19 @@ func getNumberOfTreesVisibleFromEdges() (visibleTrees int) {
 				if !forest[t][column].visited {
 					visibleTrees++
 					forest[t][column].visible = true
+					forest[t][column].visited = true
 				}
 				visibleHeight = forest[t][column].height
 			}
 		}
 		//Check from bottom
+		visibleHeight = -1
 		for t := len(forest) - 1; t >= 0; t-- {
 			if forest[t][column].height > visibleHeight {
 				if !forest[t][column].visited {
 					visibleTrees++
 					forest[t][column].visible = true
+					forest[t][column].visited = true
 				}
 				visibleHeight = forest[t][column].height
 			}
@@ -144,7 +149,7 @@ func printForest() {
 	for _, row := range forest {
 		for _, t := range row {
 			if t.visible {
-				colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 34, strconv.Itoa(t.height))
+				colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 32, strconv.Itoa(t.height))
 				fmt.Printf(colored + " ")
 			} else {
 				fmt.Printf("%d ", t.height)
