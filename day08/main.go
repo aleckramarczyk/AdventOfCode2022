@@ -85,8 +85,73 @@ func main() {
 	inputLines := readInput()
 	convertInput(inputLines)
 	numberOfTreesVisibleFromEdges := getNumberOfTreesVisibleFromEdges()
-	printForest()
+	highestScenicScore, highestScenicScoreLocation := getHighestScenicScore()
+	printForest(highestScenicScoreLocation)
 	fmt.Println(numberOfTreesVisibleFromEdges)
+	fmt.Println(highestScenicScore)
+}
+
+func getHighestScenicScore() (currentHighestScore int, highestScenicScoreLocation [2]int) {
+	for ri, row := range forest {
+		for ti, t := range row {
+			leftScore := getLeftScore(t, 1, t.height)
+			rightScore := getRightScore(t, 1, t.height)
+			upScore := getUpScore(t, 1, t.height)
+			downScore := getDownScore(t, 1, t.height)
+
+			treeScore := leftScore * rightScore * upScore * downScore
+			if treeScore > currentHighestScore {
+				currentHighestScore = treeScore
+				highestScenicScoreLocation[0] = ri
+				highestScenicScoreLocation[1] = ti
+			}
+		}
+	}
+	return currentHighestScore, highestScenicScoreLocation
+}
+
+func getLeftScore(t *tree, score int, originalHeight int) int {
+	if t.left != nil {
+		if originalHeight > t.left.height {
+			score += getLeftScore(t.left, score, originalHeight)
+		}
+	} else {
+		return 0
+	}
+	return score
+}
+
+func getRightScore(t *tree, score int, originalHeight int) int {
+	if t.right != nil {
+		if originalHeight > t.right.height {
+			score += getRightScore(t.right, score, originalHeight)
+		}
+	} else {
+		return 0
+	}
+	return score
+}
+
+func getUpScore(t *tree, score int, originalHeight int) int {
+	if t.up != nil {
+		if originalHeight > t.up.height {
+			score += getUpScore(t.up, score, originalHeight)
+		}
+	} else {
+		return 0
+	}
+	return score
+}
+
+func getDownScore(t *tree, score int, originalHeight int) int {
+	if t.down != nil {
+		if originalHeight > t.down.height {
+			score += getDownScore(t.down, score, originalHeight)
+		}
+	} else {
+		return 0
+	}
+	return score
 }
 
 func getNumberOfTreesVisibleFromEdges() (visibleTrees int) {
@@ -145,14 +210,19 @@ func getNumberOfTreesVisibleFromEdges() (visibleTrees int) {
 	return
 }
 
-func printForest() {
-	for _, row := range forest {
-		for _, t := range row {
-			if t.visible {
-				colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 32, strconv.Itoa(t.height))
+func printForest(highestScenicScoreLocation [2]int) {
+	for ri, row := range forest {
+		for ti, t := range row {
+			if ri == highestScenicScoreLocation[0] && ti == highestScenicScoreLocation[1] {
+				colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 34, strconv.Itoa(t.height))
 				fmt.Printf(colored + " ")
 			} else {
-				fmt.Printf("%d ", t.height)
+				if t.visible {
+					colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 32, strconv.Itoa(t.height))
+					fmt.Printf(colored + " ")
+				} else {
+					fmt.Printf("%d ", t.height)
+				}
 			}
 		}
 		fmt.Printf("\n")
