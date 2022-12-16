@@ -73,18 +73,65 @@ func (c *command) parseOutput() (files map[string]int, dirs []string) {
 	return
 }
 
-func executeCommands(commands []command) {
-	//root := initializeFileSystem()
+var root *directory
 
+func executeCommands(commands []command) {
 	//Create PWD object. Starts at root
-	//pwd := root
-	files, dirs := commands[1].parseOutput()
-	fmt.Println(files, dirs)
+	pwd := root
+	for _, com := range commands {
+		if com.command == "cd" {
+			if com.argument == "/" {
+				pwd = root
+			} else if com.argument == ".." {
+				pwd = pwd.parent
+			} else {
+				pwd = pwd.subDirectories[com.argument]
+			}
+		} else if com.command == "ls" {
+			files, dirs := com.parseOutput()
+			for name, size := range files {
+				pwd.createFile(name, size)
+			}
+			for _, name := range dirs {
+				pwd.createSubDirectory(name)
+			}
+		}
+	}
 }
+
+func (d *directory) findDirectoriesWithSizeOfLessThan100000() int {
+	var totalSize int
+	for _, file := range d.files {
+		totalSize += file.size
+	}
+	for _, dir := range d.subDirectories {
+		totalSize += dir.findDirectoriesWithSizeOfLessThan100000()
+	}
+	if totalSize <= 100000 {
+		directoriesMatchingSearchCriteria[d.name] = totalSize
+	}
+	return totalSize
+}
+
+func (d *directory) getSubdirectoryPath(name string) (path string) {
+	path += d.name
+	return
+}
+
+var directoriesMatchingSearchCriteria map[string]int
 
 func main() {
 	commands := parseCommands(readInput())
+	root = initializeFileSystem()
 	executeCommands(commands)
+	directoriesMatchingSearchCriteria = make(map[string]int)
+	root.findDirectoriesWithSizeOfLessThan100000()
+	output := 0
+	for name, size := range directoriesMatchingSearchCriteria {
+		output += size
+		fmt.Printf("%s : %d\n", name, size)
+	}
+	fmt.Println(output)
 }
 
 type directory struct {
