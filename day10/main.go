@@ -77,15 +77,7 @@ func (m *monitor) moveSprite(registerPos int) {
 func (m *monitor) drawPixel(pos int) {
 	row := pos / 40
 	index := pos % 40
-	lit := m.determineIfPixelIsLit(index)
-}
-
-func (m *monitor) determineIfPixelIsLit(index int) bool {
-	if m.sprite[index] == true {
-		return true
-	} else {
-		return false
-	}
+	lit := m.sprite[index]
 }
 
 func executeInstructions(intructions []*instruction) (noteableValues map[int]int) {

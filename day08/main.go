@@ -70,13 +70,14 @@ func mapRelationships() {
 }
 
 type tree struct {
-	height  int
-	left    *tree
-	right   *tree
-	up      *tree
-	down    *tree
-	visited bool
-	visible bool
+	height           int
+	left             *tree
+	right            *tree
+	up               *tree
+	down             *tree
+	visited          bool
+	visible          bool
+	isHighestScoring bool
 }
 
 var forest [][]*tree
@@ -85,15 +86,16 @@ func main() {
 	inputLines := readInput()
 	convertInput(inputLines)
 	numberOfTreesVisibleFromEdges := getNumberOfTreesVisibleFromEdges()
-	highestScenicScore, highestScenicScoreLocation := getHighestScenicScore()
-	printForest(highestScenicScoreLocation)
+	highestScenicScore := getHighestScenicScore()
+	printForest()
 	fmt.Println(numberOfTreesVisibleFromEdges)
 	fmt.Println(highestScenicScore)
 }
 
-func getHighestScenicScore() (currentHighestScore int, highestScenicScoreLocation [2]int) {
-	for ri, row := range forest {
-		for ti, t := range row {
+func getHighestScenicScore() (currentHighestScore int) {
+	var highestScoringTree = new(tree)
+	for _, row := range forest {
+		for _, t := range row {
 			leftScore := getLeftScore(t, 1, t.height)
 			rightScore := getRightScore(t, 1, t.height)
 			upScore := getUpScore(t, 1, t.height)
@@ -101,13 +103,18 @@ func getHighestScenicScore() (currentHighestScore int, highestScenicScoreLocatio
 
 			treeScore := leftScore * rightScore * upScore * downScore
 			if treeScore > currentHighestScore {
+				if highestScoringTree == nil {
+					t.isHighestScoring = true
+					highestScoringTree = t
+				}
 				currentHighestScore = treeScore
-				highestScenicScoreLocation[0] = ri
-				highestScenicScoreLocation[1] = ti
+				highestScoringTree.isHighestScoring = false
+				highestScoringTree = t
+				t.isHighestScoring = true
 			}
 		}
 	}
-	return currentHighestScore, highestScenicScoreLocation
+	return currentHighestScore
 }
 
 func getLeftScore(t *tree, score int, originalHeight int) int {
@@ -210,10 +217,10 @@ func getNumberOfTreesVisibleFromEdges() (visibleTrees int) {
 	return
 }
 
-func printForest(highestScenicScoreLocation [2]int) {
-	for ri, row := range forest {
-		for ti, t := range row {
-			if ri == highestScenicScoreLocation[0] && ti == highestScenicScoreLocation[1] {
+func printForest() {
+	for _, row := range forest {
+		for _, t := range row {
+			if t.isHighestScoring {
 				colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 34, strconv.Itoa(t.height))
 				fmt.Printf(colored + " ")
 			} else {
