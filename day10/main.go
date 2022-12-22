@@ -72,12 +72,26 @@ func (m *monitor) moveSprite(registerPos int) {
 		m.sprite[m.spritePos+i] = false
 		m.sprite[registerPos+i] = true
 	}
+	m.spritePos = registerPos
 }
 
 func (m *monitor) drawPixel(pos int) {
 	row := pos / 40
 	index := pos % 40
-	lit := m.sprite[index]
+	m.display[row][index] = m.sprite[index]
+}
+
+func (m *monitor) printDisplay() {
+	for _, row := range m.display {
+		for _, pixel := range row {
+			if pixel {
+				fmt.Printf("#")
+			} else {
+				fmt.Printf(".")
+			}
+		}
+		fmt.Printf("\n")
+	}
 }
 
 func executeInstructions(intructions []*instruction) (noteableValues map[int]int) {
@@ -86,26 +100,36 @@ func executeInstructions(intructions []*instruction) (noteableValues map[int]int
 		register:     1,
 		cycles:       make(map[int]int),
 	}
+	mon := &monitor{
+		spritePos: 1,
+	}
+	mon.moveSprite(mon.spritePos)
 	for _, inst := range intructions {
 		if inst.inst == "noop" {
-			cpu.executeNoop()
+			cpu.executeNoop(mon)
 		} else if inst.inst == "addx" {
-			cpu.executeAddx(inst.value)
+			cpu.executeAddx(inst.value, mon)
 		}
 	}
 	noteableValues = cpu.cycles
+	mon.printDisplay()
 	return
 }
 
-func (cpu *processor) executeNoop() {
+func (cpu *processor) executeNoop(m *monitor) {
 	cpu.currentCycle++
 	cpu.cycles[cpu.currentCycle] = cpu.register
+	//m.drawPixel(cpu.currentCycle - 1)
 }
 
-func (cpu *processor) executeAddx(value int) {
+func (cpu *processor) executeAddx(value int, m *monitor) {
+	//m.drawPixel(cpu.currentCycle - 1)
 	cpu.currentCycle++
 	cpu.cycles[cpu.currentCycle] = cpu.register
+	//m.drawPixel(cpu.currentCycle - 1)
 	cpu.currentCycle++
 	cpu.register += value
 	cpu.cycles[cpu.currentCycle] = cpu.register
+	fmt.Println(cpu.register)
+	//m.moveSprite(cpu.register - 1)
 }
